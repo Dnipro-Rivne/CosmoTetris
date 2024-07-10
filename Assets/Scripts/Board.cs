@@ -3,6 +3,7 @@ using UnityEngine.Tilemaps;
 
 public class Board : MonoBehaviour
 {
+    public Grid grid; // Add a reference to the Grid component
     public Tilemap tilemap { get; private set; }
     public Piece activePiece { get; private set; }
 
@@ -10,7 +11,8 @@ public class Board : MonoBehaviour
     public Vector2Int boardSize = new Vector2Int(10, 20);
     public Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
 
-    public RectInt Bounds {
+    public RectInt Bounds
+    {
         get
         {
             Vector2Int position = new Vector2Int(-boardSize.x / 2, -boardSize.y / 2);
@@ -23,7 +25,8 @@ public class Board : MonoBehaviour
         tilemap = GetComponentInChildren<Tilemap>();
         activePiece = GetComponentInChildren<Piece>();
 
-        for (int i = 0; i < tetrominoes.Length; i++) {
+        for (int i = 0; tetrominoes != null && i < tetrominoes.Length; i++)
+        {
             tetrominoes[i].Initialize();
         }
     }
@@ -40,9 +43,12 @@ public class Board : MonoBehaviour
 
         activePiece.Initialize(this, spawnPosition, data);
 
-        if (IsValidPosition(activePiece, spawnPosition)) {
+        if (IsValidPosition(activePiece, spawnPosition))
+        {
             Set(activePiece);
-        } else {
+        }
+        else
+        {
             GameOver();
         }
     }
@@ -50,6 +56,7 @@ public class Board : MonoBehaviour
     public void GameOver()
     {
         tilemap.ClearAllTiles();
+        Debug.Log("Game Over");
 
         // Do anything else you want on game over here..
     }
@@ -82,79 +89,18 @@ public class Board : MonoBehaviour
             Vector3Int tilePosition = piece.cells[i] + position;
 
             // An out of bounds tile is invalid
-            if (!bounds.Contains((Vector2Int)tilePosition)) {
+            if (!bounds.Contains((Vector2Int)tilePosition))
+            {
                 return false;
             }
 
             // A tile already occupies the position, thus invalid
-            if (tilemap.HasTile(tilePosition)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void ClearLines()
-    {
-        RectInt bounds = Bounds;
-        int row = bounds.yMin;
-
-        // Clear from bottom to top
-        while (row < bounds.yMax)
-        {
-            // Only advance to the next row if the current is not cleared
-            // because the tiles above will fall down when a row is cleared
-            if (IsLineFull(row)) {
-                LineClear(row);
-            } else {
-                row++;
-            }
-        }
-    }
-
-    public bool IsLineFull(int row)
-    {
-        RectInt bounds = Bounds;
-
-        for (int col = bounds.xMin; col < bounds.xMax; col++)
-        {
-            Vector3Int position = new Vector3Int(col, row, 0);
-
-            // The line is not full if a tile is missing
-            if (!tilemap.HasTile(position)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void LineClear(int row)
-    {
-        RectInt bounds = Bounds;
-
-        // Clear all tiles in the row
-        for (int col = bounds.xMin; col < bounds.xMax; col++)
-        {
-            Vector3Int position = new Vector3Int(col, row, 0);
-            tilemap.SetTile(position, null);
-        }
-
-        // Shift every row above down one
-        while (row < bounds.yMax)
-        {
-            for (int col = bounds.xMin; col < bounds.xMax; col++)
+            if (tilemap.HasTile(tilePosition))
             {
-                Vector3Int position = new Vector3Int(col, row + 1, 0);
-                TileBase above = tilemap.GetTile(position);
-
-                position = new Vector3Int(col, row, 0);
-                tilemap.SetTile(position, above);
+                return false;
             }
-
-            row++;
         }
-    }
 
+        return true;
+    }
 }

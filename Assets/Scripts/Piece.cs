@@ -10,15 +10,22 @@ public class Piece : MonoBehaviour
 
     public float stepDelay = 1f;
     public float moveDelay = 0.1f;
+    public float destroyDelay = 1f; // Delay before the piece is destroyed
 
     private float stepTime;
     private float moveTime;
+    private float destroyTime;
+
+    private bool isStopped;
+    private bool isAtBottom;
 
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
+        this.data = data;
         this.board = board;
         this.position = position;
-        this.data = data;
+        this.isStopped = false;
+        this.isAtBottom = false;
 
         rotationIndex = 0;
         stepTime = Time.time + stepDelay;
@@ -37,16 +44,20 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
+        if (isStopped) return;
+
         board.Clear(this);
 
         // Handle rotation
-        if (Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.Q) || rotationLeft)
         {
             Rotate(-1);
+            rotationLeft = false;
         }
-        else if (Input.GetKeyDown(KeyCode.E))
+        else if (Input.GetKeyDown(KeyCode.E) || rotationRight)
         {
             Rotate(1);
+            rotationRight = false;
         }
 
         // Handle hard drop
@@ -68,29 +79,43 @@ public class Piece : MonoBehaviour
             Step();
         }
 
+        // Stop the piece when the specific key is pressed
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            Stop();
+        }
+
+        if (isAtBottom && Time.time > destroyTime)
+        {
+            DestroyPiece();
+        }
+
         board.Set(this);
     }
 
     private void HandleMoveInputs()
     {
         // Soft drop movement
-        if (Input.GetKey(KeyCode.S))
+        if (Input.GetKey(KeyCode.S) || softDrop)
         {
             if (Move(Vector2Int.down))
             {
                 // Update the step time to prevent double movement
                 stepTime = Time.time + stepDelay;
             }
+            softDrop = false;
         }
 
         // Left/right movement
-        if (Input.GetKey(KeyCode.A))
+        if (Input.GetKey(KeyCode.A) || moveLeft)
         {
             Move(Vector2Int.left);
+            moveLeft = false;
         }
-        else if (Input.GetKey(KeyCode.D))
+        else if (Input.GetKey(KeyCode.D) || moveRight)
         {
             Move(Vector2Int.right);
+            moveRight = false;
         }
     }
 
@@ -101,7 +126,15 @@ public class Piece : MonoBehaviour
         // Step down to the next row
         if (!Move(Vector2Int.down))
         {
-            board.SpawnPiece();
+            if (position.y < -board.boardSize.y / 2)
+            {
+                board.SpawnPiece();
+            }
+            else
+            {
+                isAtBottom = true;
+                destroyTime = Time.time + destroyDelay;
+            }
         }
     }
 
@@ -112,7 +145,8 @@ public class Piece : MonoBehaviour
             continue;
         }
 
-        board.SpawnPiece();
+        isAtBottom = true;
+        destroyTime = Time.time + destroyDelay;
     }
 
     private bool Move(Vector2Int translation)
@@ -123,6 +157,7 @@ public class Piece : MonoBehaviour
 
         bool valid = board.IsValidPosition(this, newPosition);
 
+        // Only save the movement if the new position is valid
         if (valid)
         {
             position = newPosition;
@@ -134,11 +169,15 @@ public class Piece : MonoBehaviour
 
     private void Rotate(int direction)
     {
+        // Store the current rotation in case the rotation fails
+        // and we need to revert
         int originalRotation = rotationIndex;
-        rotationIndex = Wrap(rotationIndex + direction, 0, 4);
 
+        // Rotate all of the cells using a rotation matrix
+        rotationIndex = Wrap(rotationIndex + direction, 0, 4);
         ApplyRotationMatrix(direction);
 
+        // Revert the rotation if the wall kick tests fail
         if (!TestWallKicks(rotationIndex, direction))
         {
             rotationIndex = originalRotation;
@@ -150,15 +189,18 @@ public class Piece : MonoBehaviour
     {
         float[] matrix = Data.RotationMatrix;
 
+        // Rotate all of the cells using the rotation matrix
         for (int i = 0; i < cells.Length; i++)
         {
             Vector3 cell = cells[i];
+
             int x, y;
 
             switch (data.tetromino)
             {
                 case Tetromino.I:
                 case Tetromino.O:
+                    // "I" and "O" are rotated from an offset center point
                     cell.x -= 0.5f;
                     cell.y -= 0.5f;
                     x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
@@ -215,4 +257,53 @@ public class Piece : MonoBehaviour
             return min + (input - min) % (max - min);
         }
     }
+
+    private void DestroyPiece()
+    {
+        isStopped = true;
+        board.Clear(this);
+        board.SpawnPiece();
+    }
+
+    public void OnMoveLeft()
+    {
+        moveLeft = true;
+    }
+
+    public void OnMoveRight()
+    {
+        moveRight = true;
+    }
+
+    public void OnSoftDrop()
+    {
+        softDrop = true;
+    }
+
+    public void OnRotateLeft()
+    {
+        rotationLeft = true;
+    }
+
+    public void OnRotateRight()
+    {
+        rotationRight = true;
+    }
+
+    public void OnStop()
+    {
+        Stop();
+    }
+
+    public void Stop()
+    {
+        isStopped = true;
+        board.SpawnPiece();
+    }
+
+    private bool moveLeft;
+    private bool moveRight;
+    private bool softDrop;
+    private bool rotationLeft;
+    private bool rotationRight;
 }
