@@ -10,22 +10,19 @@ public class Piece : MonoBehaviour
 
     public float stepDelay = 1f;
     public float moveDelay = 0.1f;
-    public float lockDelay = 0.5f;
 
     private float stepTime;
     private float moveTime;
-    private float lockTime;
 
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
-        this.data = data;
         this.board = board;
         this.position = position;
+        this.data = data;
 
         rotationIndex = 0;
         stepTime = Time.time + stepDelay;
         moveTime = Time.time + moveDelay;
-        lockTime = 0f;
 
         if (cells == null)
         {
@@ -42,27 +39,20 @@ public class Piece : MonoBehaviour
     {
         board.Clear(this);
 
-        // We use a timer to allow the player to make adjustments to the piece
-        // before it locks in place
-        lockTime += Time.deltaTime;
-
         // Handle rotation
-        if (Input.GetKeyDown(KeyCode.Q)||rotationLeft)
+        if (Input.GetKeyDown(KeyCode.Q))
         {
-            rotationLeft = false;
             Rotate(-1);
         }
-        else if (Input.GetKeyDown(KeyCode.E)||rotationRight)
+        else if (Input.GetKeyDown(KeyCode.E))
         {
-            rotationRight = false;
             Rotate(1);
         }
 
         // Handle hard drop
-        if (Input.GetKeyDown(KeyCode.Space) || hardDown)
+        if (Input.GetKeyDown(KeyCode.Space))
         {
             HardDrop();
-            hardDown = false;
         }
 
         // Allow the player to hold movement keys but only after a move delay
@@ -81,53 +71,11 @@ public class Piece : MonoBehaviour
         board.Set(this);
     }
 
-    public void OnMoveLeft()
-    {
-        if (Time.time > moveTime)
-        {
-            left = true;
-        }
-    }
-
-    public void OnMoveRight()
-    {
-        if (Time.time > moveTime)
-        {
-            right = true;
-        }
-    }
-    
-    public void OnSoftDrop()
-    {
-        if (Time.time > moveTime)
-        {
-            softDown = true;
-        }
-    }
-    
-    public void OnRotateLeft()
-    {
-        rotationLeft = true;
-    }
-
-    public void OnRotateRight()
-    {
-        rotationRight = true;
-    }
-    
-    private bool right;
-    private bool left;
-    private bool hardDown;
-    private bool softDown;
-    private bool rotationLeft;
-    private bool rotationRight;
-
     private void HandleMoveInputs()
     {
         // Soft drop movement
-        if (Input.GetKey(KeyCode.S)||softDown)
+        if (Input.GetKey(KeyCode.S))
         {
-            softDown = false;
             if (Move(Vector2Int.down))
             {
                 // Update the step time to prevent double movement
@@ -136,14 +84,12 @@ public class Piece : MonoBehaviour
         }
 
         // Left/right movement
-        if (Input.GetKey(KeyCode.A) || left)
+        if (Input.GetKey(KeyCode.A))
         {
             Move(Vector2Int.left);
-            left = false;
         }
-        else if (Input.GetKey(KeyCode.D) || right)
+        else if (Input.GetKey(KeyCode.D))
         {
-            right = false;
             Move(Vector2Int.right);
         }
     }
@@ -153,12 +99,9 @@ public class Piece : MonoBehaviour
         stepTime = Time.time + stepDelay;
 
         // Step down to the next row
-        Move(Vector2Int.down);
-
-        // Once the piece has been inactive for too long it becomes locked
-        if (lockTime >= lockDelay)
+        if (!Move(Vector2Int.down))
         {
-            Lock();
+            board.SpawnPiece();
         }
     }
 
@@ -169,13 +112,6 @@ public class Piece : MonoBehaviour
             continue;
         }
 
-        Lock();
-    }
-
-    private void Lock()
-    {
-        board.Set(this);
-        board.ClearLines();
         board.SpawnPiece();
     }
 
@@ -187,12 +123,10 @@ public class Piece : MonoBehaviour
 
         bool valid = board.IsValidPosition(this, newPosition);
 
-        // Only save the movement if the new position is valid
         if (valid)
         {
             position = newPosition;
             moveTime = Time.time + moveDelay;
-            lockTime = 0f; // reset
         }
 
         return valid;
@@ -200,15 +134,11 @@ public class Piece : MonoBehaviour
 
     private void Rotate(int direction)
     {
-        // Store the current rotation in case the rotation fails
-        // and we need to revert
         int originalRotation = rotationIndex;
-
-        // Rotate all of the cells using a rotation matrix
         rotationIndex = Wrap(rotationIndex + direction, 0, 4);
+
         ApplyRotationMatrix(direction);
 
-        // Revert the rotation if the wall kick tests fail
         if (!TestWallKicks(rotationIndex, direction))
         {
             rotationIndex = originalRotation;
@@ -220,18 +150,15 @@ public class Piece : MonoBehaviour
     {
         float[] matrix = Data.RotationMatrix;
 
-        // Rotate all of the cells using the rotation matrix
         for (int i = 0; i < cells.Length; i++)
         {
             Vector3 cell = cells[i];
-
             int x, y;
 
             switch (data.tetromino)
             {
                 case Tetromino.I:
                 case Tetromino.O:
-                    // "I" and "O" are rotated from an offset center point
                     cell.x -= 0.5f;
                     cell.y -= 0.5f;
                     x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));

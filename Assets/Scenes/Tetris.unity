@@ -2099,7 +2099,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d159ef6a04487d48afc5338ee3de43c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tile: {fileID: 11400000, guid: a10927dec698b7c49b1375f89e8db4d2, type: 2}
+  tile: {fileID: 0}
   mainBoard: {fileID: 1887623656}
   trackingPiece: {fileID: 1887623655}
 --- !u!1 &1326589673
@@ -2377,7 +2377,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1887623655}
         m_TargetAssemblyTypeName: Piece, Assembly-CSharp
-        m_MethodName: OnHardDrop
+        m_MethodName: OnStop
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2637,7 +2637,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   stepDelay: 1
   moveDelay: 0.1
-  lockDelay: 0.5
 --- !u!114 &1887623656
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2650,6 +2649,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d4fe201741a0f14c82a9ce960b9f5e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  grid: {fileID: 1887623653}
   tetrominoes:
   - tile: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
     tetromino: 0
