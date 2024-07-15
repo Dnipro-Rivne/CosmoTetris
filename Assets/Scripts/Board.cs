@@ -11,6 +11,10 @@ public class Board : MonoBehaviour
     public Vector2Int boardSize = new Vector2Int(10, 20);
     public Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
 
+
+    public int failCount = 0;
+    public int maxFails = 5;
+
     public RectInt Bounds
     {
         get
@@ -83,18 +87,15 @@ public class Board : MonoBehaviour
     {
         RectInt bounds = Bounds;
 
-        // The position is only valid if every cell is valid
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + position;
 
-            // An out of bounds tile is invalid
             if (!bounds.Contains((Vector2Int)tilePosition))
             {
                 return false;
             }
 
-            // A tile already occupies the position, thus invalid
             if (tilemap.HasTile(tilePosition))
             {
                 return false;
@@ -102,5 +103,15 @@ public class Board : MonoBehaviour
         }
 
         return true;
+    }
+
+    public void AddFail()
+    {
+        failCount++;
+        if (failCount >= maxFails)
+        {
+            Debug.Log("YOU LOSE");
+            GameOver();
+        }
     }
 }
