@@ -41,6 +41,12 @@ public class Piece : MonoBehaviour
 
     private void Update()
     {
+        if (board == null || cells == null)
+        {
+            Debug.LogError("Board or cells data not initialized.");
+            return;
+        }
+
         board.Clear(this);
 
         // We use a timer to allow the player to make adjustments to the piece
@@ -181,8 +187,8 @@ public class Piece : MonoBehaviour
     private void Lock()
     {
         board.Set(this);
-        //board.ClearLines();
-        board.SpawnPiece();
+        board.OnPieceCaught(this); // Make sure this method is public in Board class
+        board.SpawnNextPiece();
     }
 
     private bool Move(Vector2Int translation)
@@ -204,7 +210,6 @@ public class Piece : MonoBehaviour
         {
             // If the move down was invalid, the piece has reached the bottom
             DestroyPiece();
-            //isAtBottom = true;
         }
 
         return valid;
@@ -214,7 +219,7 @@ public class Piece : MonoBehaviour
     {
         board.AddFail();
         board.Clear(this);
-        board.SpawnPiece();
+        board.SpawnNextPiece();
     }
     
     private void Rotate(int direction)
@@ -312,7 +317,6 @@ public class Piece : MonoBehaviour
     {
         // Lock the piece in its current position and spawn a new piece
         board.Set(this);
-        //board.ClearLines();
-        board.SpawnPiece();
+        board.SpawnNextPiece();
     }
 }

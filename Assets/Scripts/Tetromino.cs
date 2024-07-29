@@ -11,6 +11,7 @@ public struct TetrominoData
 {
     public Tile tile;
     public Tetromino tetromino;
+    public Color color; // Додаємо поле для кольору
 
     public Vector2Int[] cells { get; private set; }
     public Vector2Int[,] wallKicks { get; private set; }
@@ -20,5 +21,4 @@ public struct TetrominoData
         cells = Data.Cells[tetromino];
         wallKicks = Data.WallKicks[tetromino];
     }
-
 }

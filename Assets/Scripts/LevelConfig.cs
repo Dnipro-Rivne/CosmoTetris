@@ -5,6 +5,8 @@ using UnityEngine;
 public class LevelConfig : ScriptableObject
 {
     public int level;
+    public Color targetColor;
+    public int targetCount;
     public List<RowData> board;
     public List<PieceConfig> pieces;
 
