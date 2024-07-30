@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using TMPro; // Заміна на TMP_Text
-using System.Collections.Generic; // Для використання List
+using TMPro;
+using System.Collections.Generic;
 
 public class Board : MonoBehaviour
 {
-    public Grid grid; // Add a reference to the Grid component
+    public Grid grid;
     public Tilemap tilemap { get; private set; }
     public Piece activePiece { get; private set; }
 
@@ -18,15 +18,16 @@ public class Board : MonoBehaviour
 
     public TMP_Text levelText;
     public TMP_Text scoreText;
-    public TMP_Text winText; // Додано для відображення повідомлення про перемогу
+    public TMP_Text winText;
+
+    public List<LevelConfig> levelConfigs; // Список для референсів на файли LevelConfig
 
     private int currentLevel;
-    private int totalLevels = 5; // Загальна кількість рівнів
     private Color targetColor;
     private int targetCount;
     private int currentCount;
 
-    private List<Piece> activePieces = new List<Piece>(); // Список для збереження активних фігур
+    private List<Piece> activePieces = new List<Piece>();
 
     public RectInt Bounds
     {
@@ -56,7 +57,7 @@ public class Board : MonoBehaviour
             return;
         }
 
-        winText.gameObject.SetActive(false); // Ховаємо текст перемоги на початку
+        winText.gameObject.SetActive(false);
         StartLevel(1);
     }
 
@@ -72,8 +73,8 @@ public class Board : MonoBehaviour
 
     void LoadLevelConfig(int level)
     {
-        // Load level configuration from LevelConfigManager
-        LevelConfig config = LevelConfigManager.GetLevelConfig(level);
+        // Load level configuration from the list
+        LevelConfig config = levelConfigs.Find(l => l.level == level);
         if (config != null)
         {
             targetColor = config.targetColor;
@@ -104,8 +105,8 @@ public class Board : MonoBehaviour
         if (IsValidPosition(activePiece, spawnPosition))
         {
             Set(activePiece);
-            activePieces.Add(activePiece); // Додаємо активну фігуру до списку
-            DebugActivePieces(); // Виводимо активні фігури у лог
+            activePieces.Add(activePiece);
+            DebugActivePieces();
         }
         else
         {
@@ -173,7 +174,7 @@ public class Board : MonoBehaviour
 
     public void OnPieceCaught(Piece piece)
     {
-        if (piece.data.color == targetColor)  // Assuming 'color' is part of TetrominoData
+        if (piece.data.color == targetColor)
         {
             currentCount++;
             UpdateScore();
@@ -189,10 +190,9 @@ public class Board : MonoBehaviour
 
     void ShowLevelCompletion()
     {
-        // Show level completion message and part of the code
         Debug.Log("Level Completed");
-        
-        if (currentLevel >= totalLevels)
+
+        if (currentLevel >= levelConfigs.Count)
         {
             WinGame();
         }
@@ -204,25 +204,21 @@ public class Board : MonoBehaviour
 
     void WinGame()
     {
-        // Показуємо повідомлення про перемогу
         winText.gameObject.SetActive(true);
         winText.text = "Вітаємо! Ви повністю розшифрували послання Аресібо!";
         Debug.Log("Cool! You have successfully decoded the Arecibo message!");
-        // Можливо додати інші дії після виграшу, наприклад, збереження результату, перехід до меню тощо
     }
 
     void ClearBoard()
     {
         tilemap.ClearAllTiles();
-        activePieces.Clear(); // Очищаємо список активних фігур
+        activePieces.Clear();
     }
 
     public void GameOver()
     {
         tilemap.ClearAllTiles();
         Debug.Log("Game Over");
-
-        // Do anything else you want on game over here..
     }
 
     void DebugActivePieces()

@@ -2763,6 +2763,12 @@ MonoBehaviour:
   levelText: {fileID: 2122505720}
   scoreText: {fileID: 153878812}
   winText: {fileID: 153878812}
+  levelConfigs:
+  - {fileID: 11400000, guid: aa40e3ddfa603cb4db18d652e2bd86b0, type: 2}
+  - {fileID: 11400000, guid: 8f4b707f474f6454aa2976baf3a0d97d, type: 2}
+  - {fileID: 11400000, guid: af184b03c0d85d54995e6a9465214085, type: 2}
+  - {fileID: 11400000, guid: 952cf9b40f18cf143bde6b7f3563dc40, type: 2}
+  - {fileID: 11400000, guid: 31bb52b6f46ac9b4c876a66ef8143f18, type: 2}
 --- !u!1 &1918244927
 GameObject:
   m_ObjectHideFlags: 0
