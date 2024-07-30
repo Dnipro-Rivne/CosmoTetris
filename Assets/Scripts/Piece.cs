@@ -186,9 +186,14 @@ public class Piece : MonoBehaviour
 
     private void Lock()
     {
-        board.Set(this);
-        board.OnPieceCaught(this); // Make sure this method is public in Board class
-        board.SpawnNextPiece();
+        board.OnPieceStopped(this);
+    }
+
+    public void ContinueFalling()
+    {
+        lockTime = 0f; // Reset lock time
+        stepTime = Time.time + stepDelay; // Reset step time
+        moveTime = Time.time + moveDelay; // Reset move time
     }
 
     private bool Move(Vector2Int translation)
@@ -199,40 +204,23 @@ public class Piece : MonoBehaviour
 
         bool valid = board.IsValidPosition(this, newPosition);
 
-        // Only save the movement if the new position is valid
         if (valid)
         {
             position = newPosition;
             moveTime = Time.time + moveDelay;
-            lockTime = 0f; // reset
-        }
-        else if (translation == Vector2Int.down)
-        {
-            // If the move down was invalid, the piece has reached the bottom
-            DestroyPiece();
+            lockTime = 0f;
         }
 
         return valid;
     }
-    
-    private void DestroyPiece()
-    {
-        board.AddFail();
-        board.Clear(this);
-        board.SpawnNextPiece();
-    }
-    
+
     private void Rotate(int direction)
     {
-        // Store the current rotation in case the rotation fails
-        // and we need to revert
         int originalRotation = rotationIndex;
 
-        // Rotate all of the cells using a rotation matrix
         rotationIndex = Wrap(rotationIndex + direction, 0, 4);
         ApplyRotationMatrix(direction);
 
-        // Revert the rotation if the wall kick tests fail
         if (!TestWallKicks(rotationIndex, direction))
         {
             rotationIndex = originalRotation;
@@ -244,7 +232,6 @@ public class Piece : MonoBehaviour
     {
         float[] matrix = Data.RotationMatrix;
 
-        // Rotate all of the cells using the rotation matrix
         for (int i = 0; i < cells.Length; i++)
         {
             Vector3 cell = cells[i];
@@ -255,7 +242,6 @@ public class Piece : MonoBehaviour
             {
                 case Tetromino.I:
                 case Tetromino.O:
-                    // "I" and "O" are rotated from an offset center point
                     cell.x -= 0.5f;
                     cell.y -= 0.5f;
                     x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
@@ -315,8 +301,7 @@ public class Piece : MonoBehaviour
 
     private void Stop()
     {
-        // Lock the piece in its current position and spawn a new piece
-        board.Set(this);
+        board.OnPieceStopped(this);
         board.SpawnNextPiece();
     }
 }

@@ -19,11 +19,15 @@ public class Board : MonoBehaviour
     public TMP_Text levelText;
     public TMP_Text scoreText;
     public TMP_Text winText;
+    public TMP_Text splashText;
+    public GameObject splashScreen;
 
-    public List<LevelConfig> levelConfigs; // Список для референсів на файли LevelConfig
+    public List<LevelConfig> levelConfigs;
 
     private int currentLevel;
-    private Color targetColor;
+    private List<LevelConfig.PieceConfig> spawnPieces;
+    private List<LevelConfig.PieceConfig> targetPieces;
+    private int spawnIndex;
     private int targetCount;
     private int currentCount;
 
@@ -51,13 +55,16 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        if (levelText == null || scoreText == null || winText == null || tilemap == null || activePiece == null)
+        if (levelText == null || scoreText == null || winText == null || splashText == null || splashScreen == null || tilemap == null || activePiece == null)
         {
             Debug.LogError("One or more UI components or references are not assigned in the Inspector.");
             return;
         }
 
         winText.gameObject.SetActive(false);
+        splashScreen.SetActive(true);
+        splashText.gameObject.SetActive(true);
+
         StartLevel(1);
     }
 
@@ -65,21 +72,24 @@ public class Board : MonoBehaviour
     {
         currentLevel = level;
         LoadLevelConfig(level);
-        UpdateLevelText();
+        ShowSplashScreen();
         currentCount = 0;
+        failCount = 0;
+        spawnIndex = 0;
         ClearBoard();
+        InitializeBoard();
         SpawnNextPiece();
     }
 
     void LoadLevelConfig(int level)
     {
-        // Load level configuration from the list
         LevelConfig config = levelConfigs.Find(l => l.level == level);
         if (config != null)
         {
-            targetColor = config.targetColor;
-            targetCount = config.targetCount;
-            Debug.Log($"Loaded level config: Level {level}, Target Color: {ColorUtility.ToHtmlStringRGB(targetColor)}, Target Count: {targetCount}");
+            spawnPieces = new List<LevelConfig.PieceConfig>(config.spawnPieces);
+            targetPieces = new List<LevelConfig.PieceConfig>(config.targetPieces);
+            targetCount = targetPieces.Count;
+            Debug.Log($"Loaded level config: Level {level}, Target Count: {targetCount}");
         }
         else
         {
@@ -87,20 +97,37 @@ public class Board : MonoBehaviour
         }
     }
 
+    void InitializeBoard()
+    {
+        // You can add initial board setup logic here if needed
+    }
+
     void UpdateLevelText()
     {
         if (levelText != null)
         {
-            levelText.text = $"Рівень {currentLevel}\nШукай {targetCount} фігур кольору {ColorUtility.ToHtmlStringRGB(targetColor)}";
+            levelText.text = $"Рівень {currentLevel}\nШукай {targetCount} фігур";
         }
     }
 
     public void SpawnNextPiece()
     {
-        int random = Random.Range(0, tetrominoes.Length);
-        TetrominoData data = tetrominoes[random];
+        LevelConfig.PieceConfig pieceConfig;
 
-        activePiece.Initialize(this, spawnPosition, data);
+        if (spawnIndex < spawnPieces.Count)
+        {
+            pieceConfig = spawnPieces[spawnIndex];
+        }
+        else
+        {
+            // If we reach the end of the list, start from the beginning
+            spawnIndex = 0;
+            pieceConfig = spawnPieces[spawnIndex];
+        }
+
+        spawnIndex++;
+
+        activePiece.Initialize(this, spawnPosition, pieceConfig.data);
 
         if (IsValidPosition(activePiece, spawnPosition))
         {
@@ -159,8 +186,7 @@ public class Board : MonoBehaviour
         failCount++;
         if (failCount >= maxFails)
         {
-            Debug.Log("YOU LOSE");
-            GameOver();
+            RestartLevel();
         }
     }
 
@@ -172,9 +198,9 @@ public class Board : MonoBehaviour
         }
     }
 
-    public void OnPieceCaught(Piece piece)
+    public void OnPieceStopped(Piece piece)
     {
-        if (piece.data.color == targetColor)
+        if (IsPieceValid(piece))
         {
             currentCount++;
             UpdateScore();
@@ -183,15 +209,38 @@ public class Board : MonoBehaviour
             {
                 ShowLevelCompletion();
             }
+            else
+            {
+                Set(piece);
+            }
+        }
+        else
+        {
+            AddFail();
+            piece.ContinueFalling();
         }
 
         LogFixedPieces();
     }
 
+    bool IsPieceValid(Piece piece)
+    {
+        foreach (var targetPiece in targetPieces)
+        {
+            if (piece.data == targetPiece.data && piece.data.color == targetPiece.color)
+            {
+                targetPieces.Remove(targetPiece); // Видаляємо зловлену фігуру зі списку
+                return true;
+            }
+        }
+        return false;
+    }
+
     void ShowLevelCompletion()
     {
         Debug.Log("Level Completed");
-
+        splashScreen.SetActive(true);
+        splashText.text = $"Частина шифру розблокована!\nНатисніть будь-яку клавішу, щоб продовжити.";
         if (currentLevel >= levelConfigs.Count)
         {
             WinGame();
@@ -205,6 +254,7 @@ public class Board : MonoBehaviour
     void WinGame()
     {
         winText.gameObject.SetActive(true);
+        splashScreen.SetActive(false);
         winText.text = "Вітаємо! Ви повністю розшифрували послання Аресібо!";
         Debug.Log("Cool! You have successfully decoded the Arecibo message!");
     }
@@ -219,6 +269,12 @@ public class Board : MonoBehaviour
     {
         tilemap.ClearAllTiles();
         Debug.Log("Game Over");
+    }
+
+    void RestartLevel()
+    {
+        Debug.Log("Level Restarted");
+        StartLevel(currentLevel);
     }
 
     void DebugActivePieces()
@@ -252,5 +308,18 @@ public class Board : MonoBehaviour
         {
             Debug.Log($"{group.Key}: {group.Value}");
         }
+    }
+
+    void ShowSplashScreen()
+    {
+        splashScreen.SetActive(true);
+        splashText.text = $"Рівень {currentLevel}\nШукай {targetCount} фігур";
+        Invoke("HideSplashScreen", 3f); // Приховуємо сплеш-скрін через 3 секунди
+    }
+
+    void HideSplashScreen()
+    {
+        splashScreen.SetActive(false);
+        SpawnNextPiece();
     }
 }

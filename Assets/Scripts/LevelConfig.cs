@@ -5,16 +5,8 @@ using UnityEngine;
 public class LevelConfig : ScriptableObject
 {
     public int level;
-    public Color targetColor;
-    public int targetCount;
-    public List<RowData> board;
-    public List<PieceConfig> pieces;
-
-    [System.Serializable]
-    public class RowData
-    {
-        public List<int> row;
-    }
+    public List<PieceConfig> spawnPieces; // Список фігур, які спавняться на рівні
+    public List<PieceConfig> targetPieces; // Список фігур, які гравець має зловити
 
     [System.Serializable]
     public class PieceConfig
