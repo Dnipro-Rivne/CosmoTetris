@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using TMPro; // Заміна на TMP_Text
-using System.Collections.Generic; // Для використання List
 
 public class Board : MonoBehaviour
 {
@@ -20,13 +20,17 @@ public class Board : MonoBehaviour
     public TMP_Text scoreText;
     public TMP_Text winText; // Додано для відображення повідомлення про перемогу
 
-    private int currentLevel;
-    private int totalLevels = 5; // Загальна кількість рівнів
-    private Color targetColor;
-    private int targetCount;
-    private int currentCount;
+    [SerializeField] private int currentLevel;
+    [SerializeField] private int totalLevels = 5; // Загальна кількість рівнів
+    [SerializeField] private int targetCount;
+    [SerializeField] private int pieceCounter = 0;
+    [SerializeField] private Color targetColor;
 
-    private List<Piece> activePieces = new List<Piece>(); // Список для збереження активних фігур
+    [SerializeField] private int currentCount;
+
+    [SerializeField] private List<Piece> activePieces = new List<Piece>(); // Список для збереження активних фігур
+
+    [SerializeField] private List<LevelConfig> levelConfigs;
 
     public RectInt Bounds
     {
@@ -41,9 +45,10 @@ public class Board : MonoBehaviour
     {
         tilemap = GetComponentInChildren<Tilemap>();
         activePiece = GetComponentInChildren<Piece>();
-
+        //levelConfigs[0].pieces[0]
         for (int i = 0; tetrominoes != null && i < tetrominoes.Length; i++)
         {
+            
             tetrominoes[i].Initialize();
         }
     }
@@ -57,7 +62,7 @@ public class Board : MonoBehaviour
         }
 
         winText.gameObject.SetActive(false); // Ховаємо текст перемоги на початку
-        StartLevel(1);
+        StartLevel(0);
     }
 
     void StartLevel(int level)
@@ -70,15 +75,29 @@ public class Board : MonoBehaviour
         SpawnNextPiece();
     }
 
+    
     void LoadLevelConfig(int level)
     {
         // Load level configuration from LevelConfigManager
-        LevelConfig config = LevelConfigManager.GetLevelConfig(level);
+        // LevelConfig config = LevelConfigManager.GetLevelConfig(level);
+        LevelConfig config = levelConfigs[level];
+        
+        pieceCounter = 0;
         if (config != null)
         {
-            targetColor = config.targetColor;
-            targetCount = config.targetCount;
-            Debug.Log($"Loaded level config: Level {level}, Target Color: {ColorUtility.ToHtmlStringRGB(targetColor)}, Target Count: {targetCount}");
+            targetCount = 0;
+            for (int i = 0; i < config.pieces.Length; i++)
+            {
+                config.pieces[i].Initialize();
+                if (config.pieces[i].isCollecteble)
+                {
+                    targetColor = config.pieces[i].color;
+                    targetCount++;
+                }
+            }
+
+            Debug.Log(
+                $"Loaded level config: Level {level}, Target Color: {ColorUtility.ToHtmlStringRGB(targetColor)}, Target Count: {targetCount}");
         }
         else
         {
@@ -90,22 +109,40 @@ public class Board : MonoBehaviour
     {
         if (levelText != null)
         {
-            levelText.text = $"Рівень {currentLevel}\nШукай {targetCount} фігур кольору {ColorUtility.ToHtmlStringRGB(targetColor)}";
+            levelText.text =
+                $"Рівень {currentLevel}\nШукай {targetCount} фігур кольору {ColorUtility.ToHtmlStringRGB(targetColor)}";
         }
     }
 
     public void SpawnNextPiece()
     {
-        int random = Random.Range(0, tetrominoes.Length);
-        TetrominoData data = tetrominoes[random];
+        if (levelConfigs == null || levelConfigs.Count == 0)
+        {
+            Debug.LogError("LevelConfigs are not set up correctly.");
+            return;
+        }
+
+        if (levelConfigs[0].pieces == null || levelConfigs[0].pieces.Length == 0)
+        {
+            Debug.LogError("Pieces in LevelConfig are not set up correctly.");
+            return;
+        }
+
+        // Get TetrominoData from levelConfigs
+        TetrominoData data = levelConfigs[0].pieces[pieceCounter];
+        // TetrominoData data = tetrominoes[0];
+        if (pieceCounter >= levelConfigs[0].pieces.Length - 1)
+            pieceCounter = 0;
+        else
+            pieceCounter++;
 
         activePiece.Initialize(this, spawnPosition, data);
 
         if (IsValidPosition(activePiece, spawnPosition))
         {
             Set(activePiece);
-            activePieces.Add(activePiece); // Додаємо активну фігуру до списку
-            DebugActivePieces(); // Виводимо активні фігури у лог
+            activePieces.Add(activePiece); // Add the active piece to the list
+            DebugActivePieces(); // Log active pieces
         }
         else
         {
@@ -173,7 +210,7 @@ public class Board : MonoBehaviour
 
     public void OnPieceCaught(Piece piece)
     {
-        if (piece.data.color == targetColor)  // Assuming 'color' is part of TetrominoData
+        if (piece.data.isCollecteble) // Assuming 'color' is part of TetrominoData
         {
             currentCount++;
             UpdateScore();
@@ -186,12 +223,19 @@ public class Board : MonoBehaviour
 
         LogFixedPieces();
     }
-
+    
+    public void CollectedPiece()
+    {
+        currentCount++;
+        if (currentCount >= targetCount)
+            ShowLevelCompletion();
+    }
+    
     void ShowLevelCompletion()
     {
         // Show level completion message and part of the code
         Debug.Log("Level Completed");
-        
+
         if (currentLevel >= totalLevels)
         {
             WinGame();

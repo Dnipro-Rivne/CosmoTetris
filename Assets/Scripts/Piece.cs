@@ -316,6 +316,8 @@ public class Piece : MonoBehaviour
     private void Stop()
     {
         // Lock the piece in its current position and spawn a new piece
+        if (this.data.isCollecteble)
+            board.CollectedPiece();
         board.Set(this);
         board.SpawnNextPiece();
     }
