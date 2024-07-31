@@ -1578,6 +1578,56 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 606900628}
   m_CullTransparentMesh: 1
+--- !u!1 &735756581
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 735756583}
+  - component: {fileID: 735756582}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &735756582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735756581}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef582b2672329784b947a9dab0e95583, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  levelConfigs:
+  - {fileID: 11400000, guid: a86d5c9596ebd8b4fb5992e3be76e07b, type: 2}
+  - {fileID: 11400000, guid: a86d5c9596ebd8b4fb5992e3be76e07b, type: 2}
+  - {fileID: 11400000, guid: a86d5c9596ebd8b4fb5992e3be76e07b, type: 2}
+  - {fileID: 11400000, guid: a86d5c9596ebd8b4fb5992e3be76e07b, type: 2}
+  - {fileID: 11400000, guid: a86d5c9596ebd8b4fb5992e3be76e07b, type: 2}
+--- !u!4 &735756583
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 735756581}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.40390122, y: 4.291293, z: 63.003098}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &775471162
 GameObject:
   m_ObjectHideFlags: 0
@@ -2763,6 +2813,9 @@ MonoBehaviour:
   levelText: {fileID: 2122505720}
   scoreText: {fileID: 153878812}
   winText: {fileID: 153878812}
+  currentLevel: 0
+  levelPieces: []
+  caughtPieces: []
 --- !u!1 &1918244927
 GameObject:
   m_ObjectHideFlags: 0
@@ -3265,3 +3318,4 @@ SceneRoots:
   - {fileID: 1217528163}
   - {fileID: 465253632}
   - {fileID: 1341900626}
+  - {fileID: 735756583}

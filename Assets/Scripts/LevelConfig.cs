@@ -5,9 +5,6 @@ using UnityEngine;
 public class LevelConfig : ScriptableObject
 {
     public int level;
-    public Color targetColor;
-    public int targetCount;
-    public List<RowData> board;
     public List<PieceConfig> pieces;
 
     [System.Serializable]
@@ -20,7 +17,7 @@ public class LevelConfig : ScriptableObject
     public class PieceConfig
     {
         public TetrominoData data;
-        public Color color;
+        public bool catchThisPiece;
     }
 
     public static LevelConfig LoadFromJson(string json)

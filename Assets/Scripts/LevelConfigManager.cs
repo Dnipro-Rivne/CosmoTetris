@@ -1,30 +1,35 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
-public static class LevelConfigManager
+public class LevelConfigManager : MonoBehaviour
 {
-    private static List<LevelConfig> levelConfigs;
+    [SerializeField]
+    private List<LevelConfig> levelConfigs;
 
-    static LevelConfigManager()
+    public static LevelConfigManager Instance { get; private set; }
+
+    private void Awake()
     {
-        // Load all LevelConfig assets from Resources/LevelConfigs folder
-        levelConfigs = Resources.LoadAll<LevelConfig>("LevelConfigs").ToList();
-        Debug.Log($"Loaded {levelConfigs.Count} level configs from Resources/LevelConfigs.");
-        
-        foreach (var config in levelConfigs)
+        if (Instance == null)
         {
-            Debug.Log($"Loaded config: {config.name}, level: {config.level}");
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
         }
     }
 
-    public static LevelConfig GetLevelConfig(int level)
+    public LevelConfig GetLevelConfig(int level)
     {
-        var config = levelConfigs.FirstOrDefault(config => config.level == level);
-        if (config == null)
-        {
-            Debug.LogError($"No level config found for level {level}");
-        }
-        return config;
+        // var config = levelConfigs.Find(config => config.level == level);
+        // if (config == null)
+        // {
+        //     Debug.LogError($"No level config found for level {level}");
+        // }
+        if (level > levelConfigs.Count)
+            level = 0;
+        return levelConfigs[level];
     }
 }

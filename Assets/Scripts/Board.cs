@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using TMPro; // Заміна на TMP_Text
-using System.Collections.Generic; // Для використання List
+using TMPro;
+using System.Collections.Generic;
 
 public class Board : MonoBehaviour
 {
-    public Grid grid; // Add a reference to the Grid component
+    public Grid grid;
     public Tilemap tilemap { get; private set; }
     public Piece activePiece { get; private set; }
 
@@ -18,15 +18,17 @@ public class Board : MonoBehaviour
 
     public TMP_Text levelText;
     public TMP_Text scoreText;
-    public TMP_Text winText; // Додано для відображення повідомлення про перемогу
+    public TMP_Text winText;
 
-    private int currentLevel;
-    private int totalLevels = 5; // Загальна кількість рівнів
+    [SerializeField] private int currentLevel;
+    private int totalLevels = 5;
     private Color targetColor;
     private int targetCount;
     private int currentCount;
 
-    private List<Piece> activePieces = new List<Piece>(); // Список для збереження активних фігур
+    private List<Piece> activePieces = new List<Piece>();
+    [SerializeField] private List<LevelConfig.PieceConfig> levelPieces;
+    [SerializeField] private List<LevelConfig.PieceConfig> caughtPieces;
 
     public RectInt Bounds
     {
@@ -50,14 +52,16 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
+        caughtPieces = new List<LevelConfig.PieceConfig>();
+
         if (levelText == null || scoreText == null || winText == null || tilemap == null || activePiece == null)
         {
             Debug.LogError("One or more UI components or references are not assigned in the Inspector.");
             return;
         }
 
-        winText.gameObject.SetActive(false); // Ховаємо текст перемоги на початку
-        StartLevel(1);
+        winText.gameObject.SetActive(false);
+        StartLevel(0);
     }
 
     void StartLevel(int level)
@@ -72,12 +76,10 @@ public class Board : MonoBehaviour
 
     void LoadLevelConfig(int level)
     {
-        // Load level configuration from LevelConfigManager
-        LevelConfig config = LevelConfigManager.GetLevelConfig(level);
+        LevelConfig config = LevelConfigManager.Instance.GetLevelConfig(level);
         if (config != null)
         {
-            targetColor = config.targetColor;
-            targetCount = config.targetCount;
+            levelPieces = new List<LevelConfig.PieceConfig>(config.pieces);
             Debug.Log($"Loaded level config: Level {level}, Target Color: {ColorUtility.ToHtmlStringRGB(targetColor)}, Target Count: {targetCount}");
         }
         else
@@ -96,16 +98,23 @@ public class Board : MonoBehaviour
 
     public void SpawnNextPiece()
     {
-        int random = Random.Range(0, tetrominoes.Length);
-        TetrominoData data = tetrominoes[random];
+        if (levelPieces.Count == 0)
+        {
+            Debug.LogError("No pieces configured for the level.");
+            return;
+        }
 
-        activePiece.Initialize(this, spawnPosition, data);
+        LevelConfig.PieceConfig pieceConfig = levelPieces[0];
+        levelPieces.RemoveAt(0);
+        levelPieces.Add(pieceConfig);
+
+        activePiece.Initialize(this, spawnPosition, pieceConfig.data);
 
         if (IsValidPosition(activePiece, spawnPosition))
         {
             Set(activePiece);
-            activePieces.Add(activePiece); // Додаємо активну фігуру до списку
-            DebugActivePieces(); // Виводимо активні фігури у лог
+            activePieces.Add(activePiece);
+            DebugActivePieces();
         }
         else
         {
@@ -173,8 +182,10 @@ public class Board : MonoBehaviour
 
     public void OnPieceCaught(Piece piece)
     {
-        if (piece.data.color == targetColor)  // Assuming 'color' is part of TetrominoData
+        LevelConfig.PieceConfig caughtPieceConfig = levelPieces.Find(p => p.data.tetromino == piece.data.tetromino && p.data.color == piece.data.color);
+        if (caughtPieceConfig != null && caughtPieceConfig.catchThisPiece)
         {
+            caughtPieces.Add(caughtPieceConfig);
             currentCount++;
             UpdateScore();
 
@@ -183,13 +194,16 @@ public class Board : MonoBehaviour
                 ShowLevelCompletion();
             }
         }
+        else
+        {
+            AddFail();
+        }
 
         LogFixedPieces();
     }
 
     void ShowLevelCompletion()
     {
-        // Show level completion message and part of the code
         Debug.Log("Level Completed");
         
         if (currentLevel >= totalLevels)
@@ -204,25 +218,21 @@ public class Board : MonoBehaviour
 
     void WinGame()
     {
-        // Показуємо повідомлення про перемогу
         winText.gameObject.SetActive(true);
         winText.text = "Вітаємо! Ви повністю розшифрували послання Аресібо!";
         Debug.Log("Cool! You have successfully decoded the Arecibo message!");
-        // Можливо додати інші дії після виграшу, наприклад, збереження результату, перехід до меню тощо
     }
 
     void ClearBoard()
     {
         tilemap.ClearAllTiles();
-        activePieces.Clear(); // Очищаємо список активних фігур
+        activePieces.Clear();
     }
 
     public void GameOver()
     {
         tilemap.ClearAllTiles();
         Debug.Log("Game Over");
-
-        // Do anything else you want on game over here..
     }
 
     void DebugActivePieces()
