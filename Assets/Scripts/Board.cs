@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using TMPro;
+using UnityEditor;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization; // Заміна на TMP_Text
 
 public class Board : MonoBehaviour
@@ -18,8 +20,15 @@ public class Board : MonoBehaviour
     public int maxFails = 5;
 
     public TMP_Text levelText;
+    public TMP_Text goalText;
     public TMP_Text scoreText;
     public TMP_Text winText; // Додано для відображення повідомлення про перемогу
+    public GameObject levelCompleteonWindow;
+    public GameObject gameStartWindow;
+    public GameObject AresiboMassage;
+    public GameObject FinalMassage;
+    public TMP_Text infoText;
+    public GameObject buttonsContainer;
 
     [SerializeField] private int currentLevel;
     [SerializeField] private int totalLevels = 5; // Загальна кількість рівнів
@@ -27,11 +36,14 @@ public class Board : MonoBehaviour
     [SerializeField] private int pieceCounter = 0;
     [SerializeField] private Color targetColor;
 
-    [FormerlySerializedAs("currentCount")] [SerializeField] private int currentCollectedCount;
+    [FormerlySerializedAs("currentCount")] [SerializeField]
+    private int currentCollectedCount;
 
     [SerializeField] private List<Piece> activePieces = new List<Piece>(); // Список для збереження активних фігур
 
     [SerializeField] private List<LevelConfig> levelConfigs;
+
+    public List<GameObject> aresiboImages;
 
     public RectInt Bounds
     {
@@ -44,12 +56,22 @@ public class Board : MonoBehaviour
 
     private void Awake()
     {
+        levelCompleteonWindow.SetActive(false);
+        foreach (var obj in aresiboImages)
+        {
+            obj.SetActive(false);
+        }
+        goalText.text = " ";
+        levelText.text = " ";
+        scoreText.text = " ";
+        AresiboMassage.SetActive(false);
+        FinalMassage.SetActive(false);
+        buttonsContainer.SetActive(true);
         tilemap = GetComponentInChildren<Tilemap>();
         activePiece = GetComponentInChildren<Piece>();
         //levelConfigs[0].pieces[0]
         for (int i = 0; tetrominoes != null && i < tetrominoes.Length; i++)
         {
-            
             tetrominoes[i].Initialize();
         }
     }
@@ -63,26 +85,28 @@ public class Board : MonoBehaviour
         }
 
         winText.gameObject.SetActive(false); // Ховаємо текст перемоги на початку
-        StartLevel(0);
+        
+        
     }
 
-    void StartLevel(int level)
+    public void StartLevel(int level)
     {
-        currentLevel = level;
-        LoadLevelConfig(level);
-        UpdateLevelText();
+        gameStartWindow.SetActive(false);
+        activePieces.Clear();
         currentCollectedCount = 0;
+        LoadLevelConfig(currentLevel);
+        UpdateLevelText();
         ClearBoard();
         SpawnNextPiece();
     }
 
-    
+
     void LoadLevelConfig(int level)
     {
         // Load level configuration from LevelConfigManager
         // LevelConfig config = LevelConfigManager.GetLevelConfig(level);
         LevelConfig config = levelConfigs[level];
-        
+
         pieceCounter = 0;
         if (config != null)
         {
@@ -97,22 +121,27 @@ public class Board : MonoBehaviour
                 }
             }
 
-            Debug.Log(
-                $"Loaded level config: Level {level}, Target Color: {ColorUtility.ToHtmlStringRGB(targetColor)}, Target Count: {targetCount}");
+            //Debug.Log($"Loaded level config: Level {level}, Target Color: {ColorUtility.ToHtmlStringRGB(targetColor)}, Target Count: {targetCount}");
         }
         else
         {
-            Debug.LogError($"Level config for level {level} not found.");
+            //Debug.LogError($"Level config for level {level} not found.");
         }
+
+        goalText.text = "Зберіть " + targetCount + "\n" + config.levelGoalText;
+        levelText.text = $"Рівень {currentLevel + 1}";
+        scoreText.text = $"Зібрано {currentCollectedCount}";
+        infoText.text = config.levelEndText;
     }
 
     void UpdateLevelText()
     {
-        if (levelText != null)
-        {
-            levelText.text =
-                $"Рівень {currentLevel}\nШукай {targetCount} фігур кольору {ColorUtility.ToHtmlStringRGB(targetColor)}";
-        }
+        // if (levelText != null)
+        // {
+        //     winText.text =
+        //         $"Рівень {currentLevel}";
+        //    
+        // }
     }
 
     public void SpawnNextPiece()
@@ -123,16 +152,16 @@ public class Board : MonoBehaviour
             return;
         }
 
-        if (levelConfigs[0].pieces == null || levelConfigs[0].pieces.Length == 0)
+        if (levelConfigs[currentLevel].pieces == null || levelConfigs[currentLevel].pieces.Length == 0)
         {
             Debug.LogError("Pieces in LevelConfig are not set up correctly.");
             return;
         }
 
         // Get TetrominoData from levelConfigs
-        TetrominoData data = levelConfigs[0].pieces[pieceCounter];
+        TetrominoData data = levelConfigs[currentLevel].pieces[pieceCounter];
         // TetrominoData data = tetrominoes[0];
-        if (pieceCounter >= levelConfigs[0].pieces.Length - 1)
+        if (pieceCounter >= levelConfigs[currentLevel].pieces.Length - 1)
             pieceCounter = 0;
         else
             pieceCounter++;
@@ -196,8 +225,8 @@ public class Board : MonoBehaviour
         failCount++;
         if (failCount >= maxFails)
         {
-            Debug.Log("YOU LOSE");
-            GameOver();
+            string currentSceneName = SceneManager.GetActiveScene().name;
+            SceneManager.LoadScene(currentSceneName);
         }
     }
 
@@ -224,14 +253,19 @@ public class Board : MonoBehaviour
 
         LogFixedPieces();
     }
-    
-    public void CollectedPiece()
+
+    public bool CollectedPiece()
     {
         currentCollectedCount++;
         if (currentCollectedCount >= targetCount)
+        {
             ShowLevelCompletion();
+            return true;
+        }
+        scoreText.text = $"Зібрано {currentCollectedCount}";
+        return false;
     }
-    
+
     void ShowLevelCompletion()
     {
         // Show level completion message and part of the code
@@ -243,7 +277,50 @@ public class Board : MonoBehaviour
         }
         else
         {
-            StartLevel(currentLevel + 1);
+            currentLevel++;
+
+            levelCompleteonWindow.SetActive(true);
+            for (int i = 0; i < currentLevel; i++)
+            {
+                aresiboImages[i].SetActive(true);
+            }
+
+            AresiboMassage.SetActive(true);
+            infoText.gameObject.SetActive(true);
+            buttonsContainer.SetActive(false);
+        }
+    }
+
+    private bool endCheck = false;
+    public void StartNewLevel()
+    {
+        if (currentLevel == levelConfigs.Count)
+        {
+            if (endCheck)
+            {
+                string currentSceneName = SceneManager.GetActiveScene().name;
+                SceneManager.LoadScene(currentSceneName);
+            }
+            else
+            {
+                levelCompleteonWindow.SetActive(true);
+                for (int i = 0; i < aresiboImages.Count; i++)
+                {
+                    aresiboImages[i].SetActive(true);
+                }
+                infoText.gameObject.SetActive(false);
+                FinalMassage.SetActive(true);
+                buttonsContainer.SetActive(false);
+                endCheck = true;
+            }
+        }
+        else
+        {
+            levelCompleteonWindow.SetActive(false);
+            AresiboMassage.SetActive(false);
+            buttonsContainer.SetActive(true);
+            Debug.Log("started new level");
+            StartLevel(currentLevel);
         }
     }
 

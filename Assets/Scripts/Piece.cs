@@ -11,12 +11,11 @@ public class Piece : MonoBehaviour
     public float stepDelay = 1f;
     public float moveDelay = 0.1f;
     public float lockDelay = 0.5f;
-
     private float stepTime;
     private float moveTime;
     private float lockTime;
     private bool isAtBottom;
-    
+
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
         this.data = data;
@@ -24,7 +23,6 @@ public class Piece : MonoBehaviour
         this.position = position;
 
         rotationIndex = 0;
-        stepTime = Time.time + stepDelay;
         moveTime = Time.time + moveDelay;
         lockTime = 0f;
 
@@ -214,14 +212,14 @@ public class Piece : MonoBehaviour
 
         return valid;
     }
-    
+
     private void DestroyPiece()
     {
-        board.AddFail();
+        //board.AddFail();
         board.Clear(this);
         board.SpawnNextPiece();
     }
-    
+
     private void Rotate(int direction)
     {
         // Store the current rotation in case the rotation fails
@@ -313,11 +311,17 @@ public class Piece : MonoBehaviour
         }
     }
 
+
     private void Stop()
     {
         // Lock the piece in its current position and spawn a new piece
         if (this.data.isCollecteble)
-            board.CollectedPiece();
+        {
+            bool check = board.CollectedPiece();
+        }
+        else
+            board.AddFail();
+
         board.Set(this);
         board.SpawnNextPiece();
     }

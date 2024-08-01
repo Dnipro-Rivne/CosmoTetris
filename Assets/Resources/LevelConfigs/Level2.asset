@@ -12,21 +12,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 201db3e69310b2e44aed6ced9b4d95b7, type: 3}
   m_Name: Level2
   m_EditorClassIdentifier: 
-  level: 1
+  level: 2
+  levelStartText: 
+  levelGoalText: "\u0436\u043E\u0432\u0442\u0456 \u0444\u0456\u0433\u0443\u0440\u0438"
+  levelEndText: "\u0423 \u043F\u043E\u0441\u043B\u0430\u043D\u043D\u0456 \u0432\u043A\u0430\u0437\u0430\u043D\u043E
+    \u0430\u0434\u0440\u0435\u0441\u0443: \u0421\u043E\u043D\u044F\u0447\u043D\u0430
+    \u0441\u0438\u0441\u0442\u0435\u043C\u0430, \u0442\u0440\u0435\u0442\u044F \u0432\u0456\u0434
+    \u0421\u043E\u043D\u0446\u044F \u043F\u043B\u0430\u043D\u0435\u0442\u0430, \u044F\u043A\u0430
+    \u0441\u0442\u043E\u0457\u0442\u044C \u0442\u0440\u043E\u0445\u0438 \u043E\u0441\u0442\u043E\u0440\u043E\u043D\u044C."
   pieces:
-  - tile: {fileID: 0}
+  - tile: {fileID: 11400000, guid: 66df2645ff909154b9c8f7c006a6af32, type: 2}
+    tetromino: 0
+    color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 1
+  - tile: {fileID: 11400000, guid: be0a34e2a842ae742b4fa8541a5f9fcf, type: 2}
+    tetromino: 1
+    color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 0
+  - tile: {fileID: 11400000, guid: 8316c87896e7b6448a324d8a66e43174, type: 2}
+    tetromino: 3
+    color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 0
+  - tile: {fileID: 11400000, guid: 66df2645ff909154b9c8f7c006a6af32, type: 2}
+    tetromino: 4
+    color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 1
+  - tile: {fileID: 11400000, guid: f6c4109fd0d185b419e5e665b07c42f0, type: 2}
     tetromino: 0
     color: {r: 1, g: 0, b: 0, a: 0}
     isCollecteble: 0
-  - tile: {fileID: 0}
-    tetromino: 0
+  - tile: {fileID: 11400000, guid: 66df2645ff909154b9c8f7c006a6af32, type: 2}
+    tetromino: 5
     color: {r: 1, g: 0, b: 0, a: 0}
-    isCollecteble: 0
-  - tile: {fileID: 0}
-    tetromino: 0
-    color: {r: 1, g: 0, b: 0, a: 0}
-    isCollecteble: 0
-  - tile: {fileID: 0}
-    tetromino: 0
-    color: {r: 1, g: 0, b: 0, a: 0}
-    isCollecteble: 0
+    isCollecteble: 1
