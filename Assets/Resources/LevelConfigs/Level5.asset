@@ -10,30 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 201db3e69310b2e44aed6ced9b4d95b7, type: 3}
-  m_Name: Level1
+  m_Name: Level5
   m_EditorClassIdentifier: 
   level: 1
-  targetColor: {r: 1, g: 0, b: 0, a: 0}
-  targetCount: 4
-  board: []
   pieces:
-  - data:
-      tile: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
-      tetromino: 0
-      color: {r: 1, g: 0, b: 0, a: 0}
+  - tile: {fileID: 0}
+    tetromino: 0
     color: {r: 1, g: 0, b: 0, a: 0}
-  - data:
-      tile: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
-      tetromino: 0
-      color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 0
+  - tile: {fileID: 0}
+    tetromino: 0
     color: {r: 1, g: 0, b: 0, a: 0}
-  - data:
-      tile: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
-      tetromino: 0
-      color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 0
+  - tile: {fileID: 0}
+    tetromino: 0
     color: {r: 1, g: 0, b: 0, a: 0}
-  - data:
-      tile: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
-      tetromino: 0
-      color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 0
+  - tile: {fileID: 0}
+    tetromino: 0
     color: {r: 1, g: 0, b: 0, a: 0}
+    isCollecteble: 0

@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using TMPro; // Заміна на TMP_Text
+using TMPro;
+using UnityEngine.Serialization; // Заміна на TMP_Text
 
 public class Board : MonoBehaviour
 {
@@ -26,7 +27,7 @@ public class Board : MonoBehaviour
     [SerializeField] private int pieceCounter = 0;
     [SerializeField] private Color targetColor;
 
-    [SerializeField] private int currentCount;
+    [FormerlySerializedAs("currentCount")] [SerializeField] private int currentCollectedCount;
 
     [SerializeField] private List<Piece> activePieces = new List<Piece>(); // Список для збереження активних фігур
 
@@ -70,7 +71,7 @@ public class Board : MonoBehaviour
         currentLevel = level;
         LoadLevelConfig(level);
         UpdateLevelText();
-        currentCount = 0;
+        currentCollectedCount = 0;
         ClearBoard();
         SpawnNextPiece();
     }
@@ -204,7 +205,7 @@ public class Board : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = $"Рахунок: {currentCount}/{targetCount}";
+            scoreText.text = $"Рахунок: {currentCollectedCount}/{targetCount}";
         }
     }
 
@@ -212,10 +213,10 @@ public class Board : MonoBehaviour
     {
         if (piece.data.isCollecteble) // Assuming 'color' is part of TetrominoData
         {
-            currentCount++;
+            currentCollectedCount++;
             UpdateScore();
 
-            if (currentCount >= targetCount)
+            if (currentCollectedCount >= targetCount)
             {
                 ShowLevelCompletion();
             }
@@ -226,8 +227,8 @@ public class Board : MonoBehaviour
     
     public void CollectedPiece()
     {
-        currentCount++;
-        if (currentCount >= targetCount)
+        currentCollectedCount++;
+        if (currentCollectedCount >= targetCount)
             ShowLevelCompletion();
     }
     

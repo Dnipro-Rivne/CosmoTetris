@@ -2459,7 +2459,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1621382601
 Transform:
   m_ObjectHideFlags: 0
@@ -2775,7 +2775,7 @@ MonoBehaviour:
   targetCount: 0
   pieceCounter: 0
   targetColor: {r: 0, g: 0, b: 0, a: 0}
-  currentCount: 0
+  currentCollectedCount: 0
   activePieces: []
   levelConfigs:
   - {fileID: 11400000, guid: aa40e3ddfa603cb4db18d652e2bd86b0, type: 2}
