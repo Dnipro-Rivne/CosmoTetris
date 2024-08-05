@@ -6,9 +6,16 @@ using UnityEngine.UI;
 public class LevelConfig : ScriptableObject
 {
     public int level;
-    public string levelStartText;
-    public string levelGoalText;
-    public string levelEndText;
+    public multilanguadgeText levelStartText;
+    public multilanguadgeText levelGoalText;
+    public multilanguadgeText levelEndText;
     
     public TetrominoData[] pieces;
+}
+
+[System.Serializable]
+public class multilanguadgeText
+{
+    public string EN;
+    public string UA;
 }

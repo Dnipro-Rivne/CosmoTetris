@@ -321,8 +321,9 @@ public class Piece : MonoBehaviour
         }
         else
             board.AddFail();
-
-        board.Set(this);
+        
+        board.Clear(this);
+        //board.Set(this);
         board.SpawnNextPiece();
     }
 }

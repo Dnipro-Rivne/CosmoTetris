@@ -4,10 +4,13 @@ using UnityEngine.Tilemaps;
 using TMPro;
 using UnityEditor;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization; // Заміна на TMP_Text
+using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class Board : MonoBehaviour
 {
+    public GameObject gameHolder;
+
     public Grid grid; // Add a reference to the Grid component
     public Tilemap tilemap { get; private set; }
     public Piece activePiece { get; private set; }
@@ -24,9 +27,12 @@ public class Board : MonoBehaviour
     public TMP_Text scoreText;
     public TMP_Text winText; // Додано для відображення повідомлення про перемогу
     public GameObject levelCompleteonWindow;
+    public GameObject nextLevelButtonUA;
+    public GameObject nextLevelButtonEN;
     public GameObject gameStartWindow;
     public GameObject AresiboMassage;
-    public GameObject FinalMassage;
+    public GameObject FinalMassageEN;
+    public GameObject FinalMassageUA;
     public TMP_Text infoText;
     public GameObject buttonsContainer;
 
@@ -43,7 +49,10 @@ public class Board : MonoBehaviour
 
     [SerializeField] private List<LevelConfig> levelConfigs;
 
-    public List<GameObject> aresiboImages;
+    public List<float> aresiboImages;
+    public Image aresiboImage;
+
+    public bool isUA;
 
     public RectInt Bounds
     {
@@ -57,15 +66,16 @@ public class Board : MonoBehaviour
     private void Awake()
     {
         levelCompleteonWindow.SetActive(false);
-        foreach (var obj in aresiboImages)
-        {
-            obj.SetActive(false);
-        }
+        nextLevelButtonUA.SetActive(false);
+        nextLevelButtonEN.SetActive(false);
+        aresiboImage.fillAmount = 0f;
+
         goalText.text = " ";
         levelText.text = " ";
         scoreText.text = " ";
         AresiboMassage.SetActive(false);
-        FinalMassage.SetActive(false);
+        FinalMassageEN.SetActive(false);
+        FinalMassageUA.SetActive(false);
         buttonsContainer.SetActive(true);
         tilemap = GetComponentInChildren<Tilemap>();
         activePiece = GetComponentInChildren<Piece>();
@@ -85,8 +95,6 @@ public class Board : MonoBehaviour
         }
 
         winText.gameObject.SetActive(false); // Ховаємо текст перемоги на початку
-        
-        
     }
 
     public void StartLevel(int level)
@@ -100,6 +108,10 @@ public class Board : MonoBehaviour
         SpawnNextPiece();
     }
 
+    public void RestartLevel()
+    {
+        StartLevel(currentLevel);
+    }
 
     void LoadLevelConfig(int level)
     {
@@ -128,10 +140,21 @@ public class Board : MonoBehaviour
             //Debug.LogError($"Level config for level {level} not found.");
         }
 
-        goalText.text = "Зберіть " + targetCount + "\n" + config.levelGoalText;
-        levelText.text = $"Рівень {currentLevel + 1}";
-        scoreText.text = $"Зібрано {currentCollectedCount}";
-        infoText.text = config.levelEndText;
+
+        if (isUA)
+        {
+            goalText.text = "Зберіть " + targetCount + "\n" + config.levelGoalText.UA;
+            levelText.text = $"Рівень {currentLevel + 1}";
+            scoreText.text = $"Зібрано {currentCollectedCount}";
+            infoText.text = config.levelEndText.UA;
+        }
+        else
+        {
+            goalText.text = "Collect " + targetCount + "\n" + config.levelGoalText.EN;
+            levelText.text = $"Level {currentLevel + 1}";
+            scoreText.text = $"Collected {currentCollectedCount}";
+            infoText.text = config.levelEndText.EN;
+        }
     }
 
     void UpdateLevelText()
@@ -146,6 +169,8 @@ public class Board : MonoBehaviour
 
     public void SpawnNextPiece()
     {
+        Vector3Int spawnPoint = new Vector3Int(Random.Range(-4, 3), 3, 0);
+
         if (levelConfigs == null || levelConfigs.Count == 0)
         {
             Debug.LogError("LevelConfigs are not set up correctly.");
@@ -166,9 +191,9 @@ public class Board : MonoBehaviour
         else
             pieceCounter++;
 
-        activePiece.Initialize(this, spawnPosition, data);
+        activePiece.Initialize(this, spawnPoint, data);
 
-        if (IsValidPosition(activePiece, spawnPosition))
+        if (IsValidPosition(activePiece, spawnPoint))
         {
             Set(activePiece);
             activePieces.Add(activePiece); // Add the active piece to the list
@@ -234,7 +259,10 @@ public class Board : MonoBehaviour
     {
         if (scoreText != null)
         {
-            scoreText.text = $"Рахунок: {currentCollectedCount}/{targetCount}";
+            if (isUA)
+                scoreText.text = $"Рахунок: {currentCollectedCount}/{targetCount}";
+            else
+                scoreText.text = $"Score: {currentCollectedCount}/{targetCount}";
         }
     }
 
@@ -260,9 +288,14 @@ public class Board : MonoBehaviour
         if (currentCollectedCount >= targetCount)
         {
             ShowLevelCompletion();
+            gameHolder.SetActive(false);
             return true;
         }
-        scoreText.text = $"Зібрано {currentCollectedCount}";
+
+        if (isUA)
+            scoreText.text = $"Зібрано: {currentCollectedCount}";
+        else
+            scoreText.text = $"Collected: {currentCollectedCount}";
         return false;
     }
 
@@ -280,9 +313,18 @@ public class Board : MonoBehaviour
             currentLevel++;
 
             levelCompleteonWindow.SetActive(true);
+            if (isUA)
+            {
+                nextLevelButtonUA.SetActive(true);
+            }
+            else
+            {
+                nextLevelButtonEN.SetActive(true);
+            }
+
             for (int i = 0; i < currentLevel; i++)
             {
-                aresiboImages[i].SetActive(true);
+                aresiboImage.fillAmount = aresiboImages[i];
             }
 
             AresiboMassage.SetActive(true);
@@ -292,6 +334,7 @@ public class Board : MonoBehaviour
     }
 
     private bool endCheck = false;
+
     public void StartNewLevel()
     {
         if (currentLevel == levelConfigs.Count)
@@ -304,19 +347,35 @@ public class Board : MonoBehaviour
             else
             {
                 levelCompleteonWindow.SetActive(true);
+                if (isUA)
+                {
+                    nextLevelButtonUA.SetActive(true);
+                }
+                else
+                {
+                    nextLevelButtonEN.SetActive(true);
+                }
+
                 for (int i = 0; i < aresiboImages.Count; i++)
                 {
-                    aresiboImages[i].SetActive(true);
+                    aresiboImage.fillAmount = aresiboImages[i];
                 }
+
                 infoText.gameObject.SetActive(false);
-                FinalMassage.SetActive(true);
+                if (isUA)
+                    FinalMassageUA.SetActive(true);
+                else
+                    FinalMassageEN.SetActive(true);
                 buttonsContainer.SetActive(false);
                 endCheck = true;
+                gameHolder.SetActive(false);
             }
         }
         else
         {
             levelCompleteonWindow.SetActive(false);
+            nextLevelButtonUA.SetActive(false);
+            nextLevelButtonEN.SetActive(false);
             AresiboMassage.SetActive(false);
             buttonsContainer.SetActive(true);
             Debug.Log("started new level");
@@ -328,7 +387,11 @@ public class Board : MonoBehaviour
     {
         // Показуємо повідомлення про перемогу
         winText.gameObject.SetActive(true);
-        winText.text = "Вітаємо! Ви повністю розшифрували послання Аресібо!";
+        if (isUA)
+            winText.text = "Вітаємо! Ви повністю розшифрували послання Аресібо!";
+        else
+            winText.text = "Cool! You have successfully decoded the Arecibo message!";
+
         Debug.Log("Cool! You have successfully decoded the Arecibo message!");
         // Можливо додати інші дії після виграшу, наприклад, збереження результату, перехід до меню тощо
     }
@@ -378,5 +441,11 @@ public class Board : MonoBehaviour
         {
             Debug.Log($"{group.Key}: {group.Value}");
         }
+    }
+
+    public void ChangeLanguage()
+    {
+        isUA = !isUA;
+        LoadLevelConfig(currentLevel);
     }
 }
