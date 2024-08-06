@@ -375,7 +375,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1887623655}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Piece, Assembly-CSharp
         m_MethodName: OnMoveRight
         m_Mode: 1
@@ -1219,7 +1219,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1887623655}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Piece, Assembly-CSharp
         m_MethodName: OnRotateRight
         m_Mode: 1
@@ -1944,7 +1944,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1887623655}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Piece, Assembly-CSharp
         m_MethodName: OnMoveLeft
         m_Mode: 1
@@ -3948,12 +3948,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1253872411}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8d159ef6a04487d48afc5338ee3de43c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  trackingPiece: {fileID: 1887623655}
+  trackingPiece: {fileID: 0}
 --- !u!1 &1285934414
 GameObject:
   m_ObjectHideFlags: 0
@@ -4402,7 +4402,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1556784829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4447,7 +4447,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1887623655}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Piece, Assembly-CSharp
         m_MethodName: OnStop
         m_Mode: 1
@@ -5005,7 +5005,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1887623655}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Piece, Assembly-CSharp
         m_MethodName: OnRotateLeft
         m_Mode: 1
@@ -5028,7 +5028,6 @@ GameObject:
   - component: {fileID: 1887623654}
   - component: {fileID: 1887623653}
   - component: {fileID: 1887623656}
-  - component: {fileID: 1887623655}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -5064,21 +5063,6 @@ Transform:
   - {fileID: 564011154}
   m_Father: {fileID: 1341900626}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1887623655
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1887623652}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b6570178d836e8642a13a0b983600cf3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  stepDelay: 0.25
-  moveDelay: 0.1
-  lockDelay: 0.5
 --- !u!114 &1887623656
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5093,6 +5077,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameHolder: {fileID: 1341900625}
   grid: {fileID: 1887623653}
+  piecePrefab: {fileID: 4369204502457272114, guid: d11683664e4e4f04db2622890d79c913, type: 3}
   tetrominoes:
   - tile: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
     tetromino: 0
@@ -5123,7 +5108,6 @@ MonoBehaviour:
     color: {r: 1, g: 0, b: 0, a: 0}
     isCollecteble: 0
   boardSize: {x: 10, y: 10}
-  spawnPosition: {x: -1, y: 3, z: 0}
   failCount: 0
   maxFails: 5
   levelText: {fileID: 2122505720}
@@ -5161,6 +5145,7 @@ MonoBehaviour:
   - 1
   aresiboImage: {fileID: 922180050}
   isUA: 1
+  spawnDelay: 3
   StartButton: {fileID: 975088211}
 --- !u!1 &1907078114
 GameObject:
@@ -5634,7 +5619,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1887623655}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Piece, Assembly-CSharp
         m_MethodName: OnSoftDrop
         m_Mode: 1

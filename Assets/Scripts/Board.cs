@@ -2,23 +2,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using TMPro;
-using UnityEditor;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
-using System.Collections;
 
 public class Board : MonoBehaviour
 {
     public GameObject gameHolder;
+    public Grid grid;
+    public Tilemap tilemap { get; set; }
 
-    public Grid grid; // Add a reference to the Grid component
-    public Tilemap tilemap { get; private set; }
-    public Piece activePiece { get; private set; }
-
+    public Piece piecePrefab;
     public TetrominoData[] tetrominoes;
     public Vector2Int boardSize = new Vector2Int(10, 20);
-    public Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
 
     public int failCount = 0;
     public int maxFails = 5;
@@ -26,7 +21,7 @@ public class Board : MonoBehaviour
     public TMP_Text levelText;
     public TMP_Text goalText;
     public TMP_Text scoreText;
-    public TMP_Text winText; // Додано для відображення повідомлення про перемогу
+    public TMP_Text winText;
     public GameObject levelCompleteonWindow;
     public GameObject nextLevelButtonUA;
     public GameObject nextLevelButtonEN;
@@ -38,22 +33,23 @@ public class Board : MonoBehaviour
     public GameObject buttonsContainer;
 
     [SerializeField] private int currentLevel;
-    [SerializeField] private int totalLevels = 5; // Загальна кількість рівнів
+    [SerializeField] private int totalLevels = 5;
     [SerializeField] private int targetCount;
     [SerializeField] private int pieceCounter = 0;
     [SerializeField] private Color targetColor;
 
-    [FormerlySerializedAs("currentCount")] [SerializeField]
-    private int currentCollectedCount;
+    [SerializeField] private int currentCollectedCount;
 
-    [SerializeField] private List<Piece> activePieces = new List<Piece>(); // Список для збереження активних фігур
-
+    [SerializeField] private List<Piece> activePieces = new List<Piece>();
     [SerializeField] private List<LevelConfig> levelConfigs;
 
     public List<float> aresiboImages;
     public Image aresiboImage;
 
     public bool isUA;
+
+    public float spawnDelay = 1.0f; // Delay between spawning pieces
+    private float lastSpawnTime = 0f; // Time of the last spawn
 
     public RectInt Bounds
     {
@@ -77,8 +73,7 @@ public class Board : MonoBehaviour
         FinalMassageUA.SetActive(false);
         buttonsContainer.SetActive(true);
         tilemap = GetComponentInChildren<Tilemap>();
-        activePiece = GetComponentInChildren<Piece>();
-        //levelConfigs[0].pieces[0]
+
         for (int i = 0; tetrominoes != null && i < tetrominoes.Length; i++)
         {
             tetrominoes[i].Initialize();
@@ -87,13 +82,13 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
-        if (levelText == null || scoreText == null || winText == null || tilemap == null || activePiece == null)
+        if (levelText == null || scoreText == null || winText == null || tilemap == null || piecePrefab == null)
         {
             Debug.LogError("One or more UI components or references are not assigned in the Inspector.");
             return;
         }
 
-        winText.gameObject.SetActive(false); // Ховаємо текст перемоги на початку
+        winText.gameObject.SetActive(false); // Hide win text at the start
     }
 
     public void StartLevel(int level)
@@ -104,21 +99,16 @@ public class Board : MonoBehaviour
         LoadLevelConfig(currentLevel);
         UpdateLevelText();
         ClearBoard();
-        SpawnNextPiece();
-        //StartCoroutine(newpiece());
     }
 
     public void RestartLevel()
     {
-        //StartLevel(currentLevel);
         string currentSceneName = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene(currentSceneName);
     }
 
     void LoadLevelConfig(int level)
     {
-        // Load level configuration from LevelConfigManager
-        // LevelConfig config = LevelConfigManager.GetLevelConfig(level);
         LevelConfig config = levelConfigs[level];
 
         pieceCounter = 0;
@@ -134,14 +124,7 @@ public class Board : MonoBehaviour
                     targetCount++;
                 }
             }
-
-            //Debug.Log($"Loaded level config: Level {level}, Target Color: {ColorUtility.ToHtmlStringRGB(targetColor)}, Target Count: {targetCount}");
         }
-        else
-        {
-            //Debug.LogError($"Level config for level {level} not found.");
-        }
-
 
         if (isUA)
         {
@@ -161,12 +144,47 @@ public class Board : MonoBehaviour
 
     void UpdateLevelText()
     {
-        // if (levelText != null)
-        // {
-        //     winText.text =
-        //         $"Рівень {currentLevel}";
-        //    
-        // }
+    }
+
+    private void Update()
+    {
+        if (Time.time >= lastSpawnTime + spawnDelay)
+        {
+            SpawnNextPiece();
+            lastSpawnTime = Time.time;
+        }
+
+        // Обробляємо клік миші
+        if (Input.GetMouseButtonDown(0)) // Перевіряємо, чи був здійснений клік лівою кнопкою миші
+        {
+            Vector3Int tilePosition = GetTilePositionFromMouseClick();
+
+            if (tilePosition != Vector3Int.zero) // Перевірка, щоб уникнути виведення некоректних координат
+            {
+                Debug.Log($"Клік по Tilemap: {tilePosition.x}, {tilePosition.y}");
+
+                // Знаходимо всі Piece на цій позиції та викликаємо OnStop
+                foreach (Piece piece in activePieces)
+                {
+                    if (piece.ContainsPosition(tilePosition))
+                    {
+                        piece.OnStop();
+                    }
+                }
+            }
+        }
+    }
+
+    // Метод для отримання координат кліку по Tilemap
+    private Vector3Int GetTilePositionFromMouseClick()
+    {
+        // Отримуємо координати миші
+        Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
+        // Конвертуємо світові координати у Tilemap координати
+        Vector3Int tilePosition = tilemap.WorldToCell(mouseWorldPos);
+
+        return tilePosition;
     }
 
     public void SpawnNextPiece()
@@ -185,21 +203,21 @@ public class Board : MonoBehaviour
             return;
         }
 
-        // Get TetrominoData from levelConfigs
         TetrominoData data = levelConfigs[currentLevel].pieces[pieceCounter];
-        // TetrominoData data = tetrominoes[0];
+
         if (pieceCounter >= levelConfigs[currentLevel].pieces.Length - 1)
             pieceCounter = 0;
         else
             pieceCounter++;
 
-        activePiece.Initialize(this, spawnPoint, data);
+        Piece newPiece = Instantiate(piecePrefab, grid.transform);
+        newPiece.Initialize(this, spawnPoint, data);
 
-        if (IsValidPosition(activePiece, spawnPoint))
+        if (IsValidPosition(newPiece, spawnPoint))
         {
-            Set(activePiece);
-            activePieces.Add(activePiece); // Add the active piece to the list
-            DebugActivePieces(); // Log active pieces
+            Set(newPiece, newPiece.data.tile);
+            activePieces.Add(newPiece);
+            DebugActivePieces();
         }
         else
         {
@@ -207,18 +225,75 @@ public class Board : MonoBehaviour
         }
     }
 
-    IEnumerator newpiece()
-    {
-        yield return new WaitForSeconds(1);
-        SpawnNextPiece();
-    }
-
-    public void Set(Piece piece)
+    public void Set(Piece piece, Tile tile)
     {
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
-            tilemap.SetTile(tilePosition, piece.data.tile);
+            tilemap.SetTile(tilePosition, tile);
+        }
+
+        CheckForLineClears(); // Check for filled lines after setting a piece
+    }
+
+
+    private void CheckForLineClears()
+    {
+        RectInt bounds = Bounds;
+
+        int row = bounds.yMin;
+
+        while (row < bounds.yMax)
+        {
+            if (IsLineFull(row))
+            {
+                LineClear(row);
+            }
+            else
+            {
+                row++;
+            }
+        }
+    }
+
+    private bool IsLineFull(int row)
+    {
+        RectInt bounds = Bounds;
+
+        for (int col = bounds.xMin; col < bounds.xMax; col++)
+        {
+            Vector3Int position = new Vector3Int(col, row, 0);
+
+            if (!tilemap.HasTile(position))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void LineClear(int row)
+    {
+        RectInt bounds = Bounds;
+
+        for (int col = bounds.xMin; col < bounds.xMax; col++)
+        {
+            Vector3Int position = new Vector3Int(col, row, 0);
+            tilemap.SetTile(position, null);
+        }
+
+        // Зсув рядків вниз після очищення
+        for (int r = row; r < bounds.yMax; r++)
+        {
+            for (int col = bounds.xMin; col < bounds.xMax; col++)
+            {
+                Vector3Int position = new Vector3Int(col, r + 1, 0);
+                TileBase above = tilemap.GetTile(position);
+
+                position = new Vector3Int(col, r, 0);
+                tilemap.SetTile(position, above);
+            }
         }
     }
 
@@ -227,8 +302,22 @@ public class Board : MonoBehaviour
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
+            //Debug.Log("SETTING 1 for " + tilePosition.x + " " + tilePosition.y);
             tilemap.SetTile(tilePosition, null);
         }
+    }
+
+    public void RemovePiece(Piece piece)
+    {
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int tilePosition = piece.cells[i] + piece.position;
+            Debug.Log("SETTING 0 for " + tilePosition.x + " " + tilePosition.y);
+            tilemap.SetTile(tilePosition, null);
+        }
+
+        activePieces.Remove(piece);
+        Destroy(piece.gameObject); // Знищуємо фігуру після її видалення
     }
 
     public bool IsValidPosition(Piece piece, Vector3Int position)
@@ -276,7 +365,7 @@ public class Board : MonoBehaviour
 
     public void OnPieceCaught(Piece piece)
     {
-        if (piece.data.isCollecteble) // Assuming 'color' is part of TetrominoData
+        if (piece.data.isCollecteble)
         {
             currentCollectedCount++;
             UpdateScore();
@@ -309,7 +398,6 @@ public class Board : MonoBehaviour
 
     void ShowLevelCompletion()
     {
-        // Show level completion message and part of the code
         Debug.Log("Level Completed");
 
         if (currentLevel >= totalLevels)
@@ -401,7 +489,6 @@ public class Board : MonoBehaviour
 
     void WinGame()
     {
-        // Показуємо повідомлення про перемогу
         winText.gameObject.SetActive(true);
         if (isUA)
             winText.text = "Вітаємо! Ви повністю розшифрували послання Аресібо!";
@@ -409,21 +496,18 @@ public class Board : MonoBehaviour
             winText.text = "Cool! You have successfully decoded the Arecibo message!";
 
         Debug.Log("Cool! You have successfully decoded the Arecibo message!");
-        // Можливо додати інші дії після виграшу, наприклад, збереження результату, перехід до меню тощо
     }
 
     void ClearBoard()
     {
         tilemap.ClearAllTiles();
-        activePieces.Clear(); // Очищаємо список активних фігур
+        activePieces.Clear();
     }
 
     public void GameOver()
     {
         tilemap.ClearAllTiles();
         Debug.Log("Game Over");
-
-        // Do anything else you want on game over here..
     }
 
     void DebugActivePieces()

@@ -4,17 +4,19 @@ public class Piece : MonoBehaviour
 {
     public Board board { get; private set; }
     public TetrominoData data { get; private set; }
-    public Vector3Int[] cells { get; private set; }
-    public Vector3Int position { get; private set; }
+    [SerializeField] public Vector3Int[] cells { get; private set; }
+    [SerializeField] public Vector3Int position { get; private set; }
     public int rotationIndex { get; private set; }
 
     public float stepDelay = 1f;
     public float moveDelay = 0.1f;
     public float lockDelay = 0.5f;
+
     private float stepTime;
     private float moveTime;
     private float lockTime;
     private bool isAtBottom;
+    public bool isValid = true;
 
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
@@ -23,6 +25,7 @@ public class Piece : MonoBehaviour
         this.position = position;
 
         rotationIndex = 0;
+        stepTime = Time.time + stepDelay;
         moveTime = Time.time + moveDelay;
         lockTime = 0f;
 
@@ -47,11 +50,8 @@ public class Piece : MonoBehaviour
 
         board.Clear(this);
 
-        // We use a timer to allow the player to make adjustments to the piece
-        // before it locks in place
         lockTime += Time.deltaTime;
 
-        // Handle rotation
         if (Input.GetKeyDown(KeyCode.Q) || rotationLeft)
         {
             rotationLeft = false;
@@ -63,27 +63,24 @@ public class Piece : MonoBehaviour
             Rotate(1);
         }
 
-        // Handle hard drop
         if (Input.GetKeyDown(KeyCode.Space) || hardDown)
         {
             HardDrop();
             hardDown = false;
         }
 
-        // Allow the player to hold movement keys but only after a move delay
-        // so it does not move too fast
         if (Time.time > moveTime)
         {
             HandleMoveInputs();
         }
 
-        // Advance the piece to the next row every x seconds
         if (Time.time > stepTime)
         {
             Step();
         }
 
-        board.Set(this);
+        if (isValid)
+            board.Set(this, this.data.tile);
     }
 
     public void OnMoveLeft()
@@ -134,18 +131,15 @@ public class Piece : MonoBehaviour
 
     private void HandleMoveInputs()
     {
-        // Soft drop movement
         if (Input.GetKey(KeyCode.S) || softDown)
         {
             softDown = false;
             if (Move(Vector2Int.down))
             {
-                // Update the step time to prevent double movement
                 stepTime = Time.time + stepDelay;
             }
         }
 
-        // Left/right movement
         if (Input.GetKey(KeyCode.A) || left)
         {
             Move(Vector2Int.left);
@@ -161,17 +155,12 @@ public class Piece : MonoBehaviour
     private void Step()
     {
         stepTime = Time.time + stepDelay;
-        
-        // Step down to the next row
-        Move(Vector2Int.down);
 
-        // Once the piece has been inactive for too long it becomes locked
-        if (lockTime >= lockDelay)
+        if (!Move(Vector2Int.down))
         {
+            isValid = false;
             Lock();
         }
-        
-        Debug.Log(" coords - " + position);
     }
 
     private void HardDrop()
@@ -186,9 +175,11 @@ public class Piece : MonoBehaviour
 
     private void Lock()
     {
-        board.Set(this);
-        board.OnPieceCaught(this); // Make sure this method is public in Board class
-        board.SpawnNextPiece();
+        // Закріплюємо фігуру на дошці
+        board.Set(this, null);
+        //board.OnPieceCaught(this);
+        board.RemovePiece(this);
+        //Destroy(gameObject); // Знищуємо фігуру після її закріплення
     }
 
     private bool Move(Vector2Int translation)
@@ -199,40 +190,27 @@ public class Piece : MonoBehaviour
 
         bool valid = board.IsValidPosition(this, newPosition);
 
-        // Only save the movement if the new position is valid
         if (valid)
         {
             position = newPosition;
             moveTime = Time.time + moveDelay;
-            lockTime = 0f; // reset
+            lockTime = 0f;
         }
         else if (translation == Vector2Int.down)
         {
-            // If the move down was invalid, the piece has reached the bottom
-            DestroyPiece();
+            isAtBottom = true;
         }
 
         return valid;
     }
 
-    private void DestroyPiece()
-    {
-        //board.AddFail();
-        board.Clear(this);
-        board.SpawnNextPiece();
-    }
-
     private void Rotate(int direction)
     {
-        // Store the current rotation in case the rotation fails
-        // and we need to revert
         int originalRotation = rotationIndex;
 
-        // Rotate all of the cells using a rotation matrix
         rotationIndex = Wrap(rotationIndex + direction, 0, 4);
         ApplyRotationMatrix(direction);
 
-        // Revert the rotation if the wall kick tests fail
         if (!TestWallKicks(rotationIndex, direction))
         {
             rotationIndex = originalRotation;
@@ -244,7 +222,6 @@ public class Piece : MonoBehaviour
     {
         float[] matrix = Data.RotationMatrix;
 
-        // Rotate all of the cells using the rotation matrix
         for (int i = 0; i < cells.Length; i++)
         {
             Vector3 cell = cells[i];
@@ -255,7 +232,6 @@ public class Piece : MonoBehaviour
             {
                 case Tetromino.I:
                 case Tetromino.O:
-                    // "I" and "O" are rotated from an offset center point
                     cell.x -= 0.5f;
                     cell.y -= 0.5f;
                     x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
@@ -313,19 +289,30 @@ public class Piece : MonoBehaviour
         }
     }
 
-
     private void Stop()
     {
-        // Lock the piece in its current position and spawn a new piece
         if (this.data.isCollecteble)
         {
-            bool check = board.CollectedPiece();
+            board.CollectedPiece();
         }
         else
+        {
             board.AddFail();
-        
-        board.Clear(this);
-        //board.Set(this);
-        board.SpawnNextPiece();
+        }
+
+        board.RemovePiece(this);
+    }
+
+    // Метод для перевірки, чи містить фігура певну позицію
+    public bool ContainsPosition(Vector3Int positionToCheck)
+    {
+        foreach (var cell in cells)
+        {
+            if (cell + position == positionToCheck)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
