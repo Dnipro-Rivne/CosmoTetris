@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 using System.Collections;
+
 public class Board : MonoBehaviour
 {
     public GameObject gameHolder;
@@ -104,11 +105,14 @@ public class Board : MonoBehaviour
         UpdateLevelText();
         ClearBoard();
         SpawnNextPiece();
+        //StartCoroutine(newpiece());
     }
 
     public void RestartLevel()
     {
-        StartLevel(currentLevel);
+        //StartLevel(currentLevel);
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        SceneManager.LoadScene(currentSceneName);
     }
 
     void LoadLevelConfig(int level)
@@ -201,6 +205,12 @@ public class Board : MonoBehaviour
         {
             GameOver();
         }
+    }
+
+    IEnumerator newpiece()
+    {
+        yield return new WaitForSeconds(1);
+        SpawnNextPiece();
     }
 
     public void Set(Piece piece)
@@ -312,6 +322,7 @@ public class Board : MonoBehaviour
             {
                 nextLevelButtonEN.SetActive(true);
             }
+
             WinGame();
         }
         else
@@ -380,6 +391,7 @@ public class Board : MonoBehaviour
                     FinalMassageEN.SetActive(true);
                     nextLevelButtonEN.SetActive(true);
                 }
+
                 buttonsContainer.SetActive(false);
                 endCheck = true;
                 gameHolder.SetActive(false);
@@ -447,9 +459,20 @@ public class Board : MonoBehaviour
         }
     }
 
+    public TMP_Text StartButton;
+
     public void ChangeLanguage()
     {
         isUA = !isUA;
+        if (isUA)
+        {
+            StartButton.text = "Почати гру";
+        }
+        else
+        {
+            StartButton.text = "Start game";
+        }
+
         LoadLevelConfig(currentLevel);
     }
 }

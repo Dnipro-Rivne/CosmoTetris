@@ -161,7 +161,7 @@ public class Piece : MonoBehaviour
     private void Step()
     {
         stepTime = Time.time + stepDelay;
-
+        
         // Step down to the next row
         Move(Vector2Int.down);
 
@@ -170,6 +170,8 @@ public class Piece : MonoBehaviour
         {
             Lock();
         }
+        
+        Debug.Log(" coords - " + position);
     }
 
     private void HardDrop()
