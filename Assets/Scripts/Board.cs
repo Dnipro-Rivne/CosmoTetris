@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
-
+using System.Collections;
 public class Board : MonoBehaviour
 {
     public GameObject gameHolder;
@@ -66,8 +66,6 @@ public class Board : MonoBehaviour
     private void Awake()
     {
         levelCompleteonWindow.SetActive(false);
-        nextLevelButtonUA.SetActive(false);
-        nextLevelButtonEN.SetActive(false);
         aresiboImage.fillAmount = 0f;
 
         goalText.text = " ";
@@ -306,6 +304,14 @@ public class Board : MonoBehaviour
 
         if (currentLevel >= totalLevels)
         {
+            if (isUA)
+            {
+                nextLevelButtonUA.SetActive(true);
+            }
+            else
+            {
+                nextLevelButtonEN.SetActive(true);
+            }
             WinGame();
         }
         else
@@ -337,7 +343,18 @@ public class Board : MonoBehaviour
 
     public void StartNewLevel()
     {
-        if (currentLevel == levelConfigs.Count)
+        if (currentLevel != levelConfigs.Count)
+        {
+            levelCompleteonWindow.SetActive(false);
+            AresiboMassage.SetActive(false);
+            buttonsContainer.SetActive(true);
+            nextLevelButtonUA.SetActive(false);
+            nextLevelButtonEN.SetActive(false);
+
+            Debug.Log("started new level");
+            StartLevel(currentLevel);
+        }
+        else
         {
             if (endCheck)
             {
@@ -347,15 +364,6 @@ public class Board : MonoBehaviour
             else
             {
                 levelCompleteonWindow.SetActive(true);
-                if (isUA)
-                {
-                    nextLevelButtonUA.SetActive(true);
-                }
-                else
-                {
-                    nextLevelButtonEN.SetActive(true);
-                }
-
                 for (int i = 0; i < aresiboImages.Count; i++)
                 {
                     aresiboImage.fillAmount = aresiboImages[i];
@@ -363,23 +371,19 @@ public class Board : MonoBehaviour
 
                 infoText.gameObject.SetActive(false);
                 if (isUA)
+                {
                     FinalMassageUA.SetActive(true);
+                    nextLevelButtonUA.SetActive(true);
+                }
                 else
+                {
                     FinalMassageEN.SetActive(true);
+                    nextLevelButtonEN.SetActive(true);
+                }
                 buttonsContainer.SetActive(false);
                 endCheck = true;
                 gameHolder.SetActive(false);
             }
-        }
-        else
-        {
-            levelCompleteonWindow.SetActive(false);
-            nextLevelButtonUA.SetActive(false);
-            nextLevelButtonEN.SetActive(false);
-            AresiboMassage.SetActive(false);
-            buttonsContainer.SetActive(true);
-            Debug.Log("started new level");
-            StartLevel(currentLevel);
         }
     }
 
