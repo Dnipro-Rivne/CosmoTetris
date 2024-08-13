@@ -18,7 +18,7 @@ MonoBehaviour:
     UA: 
   levelGoalText:
     EN: blue figures
-    UA: "\u0441\u0438\u043D\u0456 \u0444\u0456\u0433\u0443\u0440\u0438"
+    UA: "\u0441\u0438\u043D\u0456\u0445 \u0444\u0456\u0433\u0443\u0440"
   levelEndText:
     EN: This is the double helix structure of human DNA.
     UA: "\u0422\u0430\u043A \u0437\u0430\u0448\u0438\u0444\u0440\u043E\u0432\u0430\u043D\u0430
