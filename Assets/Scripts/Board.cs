@@ -551,12 +551,53 @@ public class Board : MonoBehaviour
         if (isUA)
         {
             StartButton.text = "Почати гру";
+            OnSetUkrainian();
         }
         else
         {
             StartButton.text = "Start game";
+            OnSetEnglish();
         }
 
         LoadLevelConfig(currentLevel);
     }
+
+    public void OnSetUkrainian()
+    {
+        foreach (GameObject obj in EnglishObjects)
+        {
+            if (obj != null)
+            {
+                obj.SetActive(false);
+            }
+        }
+        foreach (GameObject obj in UkrainianObjects)
+        {
+            if (obj != null)
+            {
+                obj.SetActive(true);
+            }
+        }
+    }
+    
+    public void OnSetEnglish()
+    {
+        foreach (GameObject obj in UkrainianObjects)
+        {
+            if (obj != null)
+            {
+                obj.SetActive(false);
+            }
+        }
+        foreach (GameObject obj in EnglishObjects)
+        {
+            if (obj != null)
+            {
+                obj.SetActive(true);
+            }
+        }
+    }
+    
+    [SerializeField] private GameObject[] EnglishObjects;
+    [SerializeField] private GameObject[] UkrainianObjects;
 }
